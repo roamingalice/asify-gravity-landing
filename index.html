@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f5f1ec">
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="%231a1612"/><text x="16" y="23" font-size="20" fill="%23c9a56b" text-anchor="middle" font-family="serif">✦</text></svg>'>
+<title>ASify · 今日身體占卜</title>
+<style>
+  :root {
+    --bg: #f5f1ec;
+    --ink: #1a1612;
+    --ink-soft: #6b6158;
+    --accent: #8b5a3c;
+    --gold: #c9a56b;
+    --card-back-1: #2a1d14;
+    --card-back-2: #3d2b1e;
+    --slot-line: rgba(100, 80, 60, 0.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    touch-action: none;
+    -webkit-user-select: none;
+            user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #fff 0%, transparent 60%),
+      radial-gradient(800px 400px at 100% 100%, rgba(212,166,120,0.14) 0%, transparent 60%),
+      radial-gradient(800px 400px at 0% 100%, rgba(200,180,150,0.12) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #stage { position: fixed; inset: 0; z-index: 1; }
+
+  /* ==== 掉落中的商品卡 ==== */
+  .product {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: center center;
+    will-change: transform;
+    cursor: grab;
+    pointer-events: auto;
+    transition: filter .2s ease;
+  }
+  .product.dragging { cursor: grabbing; z-index: 5; }
+  .product .card {
+    width: 100%; height: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    background: #fdfbf7;
+    box-shadow:
+      0 8px 20px rgba(40, 30, 20, 0.14),
+      0 2px 4px rgba(40, 30, 20, 0.08),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+  .product .card .imgwrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(160deg, #faf6ef 0%, #ede4d4 100%);
+  }
+  .product .card img {
+    position: absolute;
+    inset: 6%;
+    width: 88%; height: 88%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(40,30,20,0.15));
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+  .product .card .name {
+    background: #fdfbf7;
+    padding: 6px 10px 8px;
+    border-top: 1px solid rgba(100,80,60,0.08);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+  .product .card .name .sub {
+    display: block;
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--ink-soft);
+    letter-spacing: 0.15em;
+    margin-top: 1px;
+  }
+  @media (hover: hover) {
+    .product:hover .card {
+      filter: brightness(1.04);
+      box-shadow:
+        0 14px 34px rgba(40, 30, 20, 0.2),
+        0 0 0 2px var(--gold),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+  }
+  .product.trump .card {
+    box-shadow:
+      0 12px 34px rgba(201, 165, 107, 0.5),
+      0 0 0 2px var(--gold),
+      inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .product.trump .card::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(120deg,
+      transparent 35%,
+      rgba(255, 240, 200, 0.5) 50%,
+      transparent 65%);
+    animation: shine 2.6s ease-in-out infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes shine {
+    0%   { transform: translateX(-110%); }
+    100% { transform: translateX(110%); }
+  }
+
+  /* ==== 頂部文案 ==== */
+  #overlay {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: max(26px, env(safe-area-inset-top)) 24px 0;
+    pointer-events: none;
+    z-index: 10;
+    text-align: center;
+    transition: opacity .4s ease;
+  }
+  #overlay.dim { opacity: 0.35; }
+  #overlay .brand {
+    font-size: 11px;
+    letter-spacing: 0.42em;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  #overlay h1 {
+    font-size: clamp(20px, 4vw, 36px);
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+  }
+  #overlay .subline {
+    font-size: clamp(12px, 1.6vw, 14px);
+    color: var(--ink-soft);
+    margin-top: 10px;
+    letter-spacing: 0.12em;
+  }
+  #overlay .counter {
+    display: inline-block;
+    padding: 4px 12px;
+    margin-top: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(6px);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.18em;
+    font-weight: 600;
+  }
+
+  /* ==== 三槽（身/心/意）==== */
+  #slots {
+    position: fixed;
+    top: clamp(130px, 18vh, 180px);
+    left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: clamp(10px, 2.4vw, 32px);
+    pointer-events: none;
+    z-index: 8;
+    padding: 0 20px;
+  }
+  .slot {
+    width: clamp(72px, 10.5vw, 110px);
+    aspect-ratio: 3 / 4;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px dashed var(--slot-line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(4px);
+    transition: all .4s ease;
+  }
+  .slot .role {
+    font-size: clamp(16px, 2.6vw, 22px);
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: 0.3em;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+    opacity: 0.6;
+  }
+  .slot .role-en {
+    font-size: 9px;
+    color: var(--ink-soft);
+    letter-spacing: 0.25em;
+    opacity: 0.5;
+    margin-top: 4px;
+  }
+  .slot.filled {
+    border-style: solid;
+    border-color: var(--gold);
+    background: transparent;
+  }
+  .slot.drop-hover {
+    border-style: solid;
+    border-color: var(--gold);
+    background: rgba(201, 165, 107, 0.18);
+    transform: scale(1.06);
+    box-shadow: 0 0 24px rgba(201,165,107,0.35);
+  }
+  .slot.drop-hover .role { color: var(--gold); opacity: 1; }
+  .slot.filled .role, .slot.filled .role-en { display: none; }
+  .slot .placed {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transform: rotateY(180deg);
+    transition: transform .8s cubic-bezier(.6,.1,.3,1.1);
+  }
+  .slot.revealed .placed { transform: rotateY(0); }
+  .slot .face, .slot .back {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 14px;
+  }
+  .slot .face {
+    background: #fdfbf7;
+    display: flex;
+    flex-direction: column;
+  }
+  .slot .face .imgwrap {
+    flex: 1;
+    background: linear-gradient(160deg, #faf6ef 0%, #ede4d4 100%);
+    position: relative;
+  }
+  .slot .face img {
+    position: absolute;
+    inset: 6%;
+    width: 88%; height: 88%;
+    object-fit: contain;
+  }
+  .slot .face .kw {
+    padding: 8px 4px;
+    background: var(--ink);
+    color: var(--gold);
+    font-size: clamp(11px, 1.6vw, 14px);
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.2em;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+  }
+  .slot .back {
+    transform: rotateY(180deg);
+    background:
+      radial-gradient(ellipse at center, #4a3424 0%, var(--card-back-1) 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slot .back::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    opacity: 0.4;
+  }
+  .slot .back::after {
+    content: "✦";
+    color: var(--gold);
+    font-size: clamp(16px, 2vw, 20px);
+    opacity: 0.6;
+  }
+
+  /* 飛行中卡片覆寫 */
+  .product.flying {
+    transition: transform .75s cubic-bezier(.55,.05,.3,1), opacity .6s ease;
+    pointer-events: none !important;
+    z-index: 12;
+  }
+
+  /* ==== 右上控制區 ==== */
+  .controls {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    right: 14px;
+    display: flex; gap: 8px;
+    z-index: 20;
+  }
+  .controls button {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(30, 20, 10, 0.08);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: #2a2a2a;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.12em;
+    transition: all .2s ease;
+    font-weight: 500;
+  }
+  .controls button:hover {
+    background: var(--ink);
+    color: var(--gold);
+    border-color: var(--ink);
+  }
+
+  /* ==== 底部提示 ==== */
+  #hint {
+    position: fixed; left: 0; right: 0;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    pointer-events: none;
+    z-index: 10;
+    letter-spacing: 0.18em;
+    transition: opacity .4s ease;
+  }
+  #hint.hide { opacity: 0; }
+  #hint .dot { display: inline-block; margin: 0 10px; opacity: 0.45; }
+
+  /* ==== 結果覆蓋層 ==== */
+  #result-overlay {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, #1e1611 0%, #0c0906 100%);
+    color: #f5ead5;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .6s ease;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 56px 20px max(40px, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 32px;
+  }
+  #result-overlay.show { opacity: 1; pointer-events: auto; }
+  #result-overlay::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(600px 300px at 50% 20%, rgba(201,165,107,0.12) 0%, transparent 60%),
+      radial-gradient(400px 200px at 20% 80%, rgba(139,90,60,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  #result-overlay .result-label {
+    font-size: 11px;
+    letter-spacing: 0.5em;
+    color: var(--gold);
+    opacity: 0.8;
+    animation: rise .6s ease .2s both;
+  }
+  #result-overlay .result-title {
+    font-family: "Noto Serif TC", "Songti TC", serif;
+    font-size: clamp(26px, 5.5vw, 48px);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-align: center;
+    line-height: 1.3;
+    animation: rise .7s ease .4s both;
+  }
+  #result-overlay .result-title .archetype-name {
+    color: var(--gold);
+  }
+  #result-overlay .trio {
+    display: flex;
+    gap: clamp(10px, 2vw, 24px);
+    animation: rise .8s ease .6s both;
+  }
+  .trio .mini {
+    width: clamp(72px, 11vw, 110px);
+    aspect-ratio: 3 / 4;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fdfbf7;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,165,107,0.3);
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .trio .mini .imgwrap { flex: 1; position: relative; background: linear-gradient(160deg, #faf6ef 0%, #ede4d4 100%); }
+  .trio .mini img { position: absolute; inset: 6%; width: 88%; height: 88%; object-fit: contain; }
+  .trio .mini .kw {
+    padding: 5px 2px;
+    background: var(--ink);
+    color: var(--gold);
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.2em;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+  }
+  .trio .mini .role-tag {
+    position: absolute;
+    top: -20px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 0.3em;
+    opacity: 0.7;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+  }
+  #result-overlay .narrative {
+    max-width: 520px;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+    font-size: clamp(15px, 2vw, 18px);
+    line-height: 1.9;
+    color: #e8dcc3;
+    text-align: center;
+    letter-spacing: 0.05em;
+    padding: 0 20px;
+    animation: rise .8s ease .8s both;
+  }
+  /* ==== 占卜禮 ==== */
+  #oracle-gift {
+    background: linear-gradient(160deg, rgba(201,165,107,0.14), rgba(139,90,60,0.08));
+    border: 1px solid rgba(201,165,107,0.38);
+    border-radius: 18px;
+    padding: 26px 28px;
+    max-width: 520px;
+    width: 100%;
+    animation: rise .85s ease 1.1s both;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+  }
+  #oracle-gift::before {
+    content: "✦";
+    position: absolute;
+    top: -14px; left: 50%;
+    transform: translateX(-50%);
+    background: #0c0906;
+    color: var(--gold);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    border: 1px solid rgba(201,165,107,0.4);
+  }
+  #oracle-gift .gift-label {
+    font-size: 10px;
+    letter-spacing: 0.5em;
+    color: var(--gold);
+    opacity: 0.9;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  #oracle-gift .gift-title {
+    font-family: "Noto Serif TC", "Songti TC", serif;
+    font-size: clamp(20px, 3.4vw, 28px);
+    color: #f5ead5;
+    line-height: 1.4;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  #oracle-gift .gift-title .rate {
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 1.15em;
+    letter-spacing: 0.02em;
+    margin: 0 2px;
+  }
+  #oracle-gift .gift-sub {
+    font-size: 13px;
+    color: rgba(245,234,213,0.7);
+    letter-spacing: 0.08em;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+    margin-bottom: 8px;
+  }
+  #oracle-gift .gift-code-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 2px 0 10px;
+  }
+  #oracle-gift .gift-code {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(26,22,18,0.55);
+    border: 1px dashed rgba(201,165,107,0.5);
+    border-radius: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  #oracle-gift .gift-code:hover {
+    background: rgba(26,22,18,0.8);
+    border-color: var(--gold);
+  }
+  #oracle-gift .gift-code.copied { background: var(--gold); border-style: solid; border-color: var(--gold); }
+  #oracle-gift .gift-code.copied .ct-val,
+  #oracle-gift .gift-code.copied .ct-lbl,
+  #oracle-gift .gift-code.copied .ct-icon { color: var(--ink); }
+  #oracle-gift .gift-code .ct-lbl {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: rgba(245,234,213,0.55);
+    font-weight: 500;
+  }
+  #oracle-gift .gift-code .ct-val {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 16px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    font-weight: 600;
+  }
+  #oracle-gift .gift-code .ct-icon {
+    font-size: 11px;
+    color: rgba(245,234,213,0.6);
+    letter-spacing: 0.15em;
+  }
+  #oracle-gift .gift-until {
+    font-size: 11px;
+    color: rgba(245,234,213,0.55);
+    letter-spacing: 0.15em;
+  }
+  #oracle-gift .gift-cta {
+    display: inline-block;
+    margin: 4px auto 0;
+    background: var(--gold);
+    color: var(--ink);
+    padding: 13px 32px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-decoration: none;
+    transition: all .2s ease;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+  }
+  #oracle-gift .gift-cta:hover {
+    background: #e0bf83;
+    transform: translateY(-1px);
+  }
+  #oracle-gift .gift-invite {
+    background: transparent;
+    border: none;
+    color: rgba(245,234,213,0.75);
+    font-size: 12px;
+    font-family: inherit;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    padding: 6px 12px;
+    margin-top: 2px;
+    text-decoration: underline;
+    text-decoration-color: rgba(201,165,107,0.4);
+    text-underline-offset: 5px;
+    transition: color .2s ease;
+  }
+  #oracle-gift .gift-invite:hover { color: var(--gold); }
+  #oracle-gift .gift-invite.copied { color: var(--gold); text-decoration: none; }
+
+  /* ==== 賣點橋接 ==== */
+  .pick .bridge {
+    font-size: 11px;
+    color: rgba(232, 220, 195, 0.75);
+    line-height: 1.55;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(201, 165, 107, 0.2);
+    letter-spacing: 0.02em;
+  }
+  .pick .bridge .hl { color: var(--gold); font-weight: 600; }
+
+  #result-overlay .picks-header {
+    text-align: center;
+    animation: rise .85s ease .95s both;
+    margin-bottom: -8px;
+  }
+  #result-overlay .picks-header .picks-title {
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 0.2em;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+    opacity: 0.9;
+  }
+  #result-overlay .picks {
+    display: flex;
+    gap: 16px;
+    max-width: 680px;
+    width: 100%;
+    animation: rise .9s ease 1s both;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .pick {
+    flex: 1;
+    min-width: 180px;
+    max-width: 260px;
+    background: rgba(245, 234, 213, 0.06);
+    border: 1px solid rgba(201, 165, 107, 0.25);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all .2s ease;
+    color: inherit;
+    text-decoration: none;
+  }
+  .pick:hover {
+    background: rgba(245, 234, 213, 0.12);
+    border-color: var(--gold);
+    transform: translateY(-2px);
+  }
+  .pick .thumb {
+    width: 56px; height: 76px;
+    border-radius: 8px;
+    background: linear-gradient(160deg, #faf6ef 0%, #ede4d4 100%);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .pick .thumb img {
+    position: absolute;
+    inset: 8%;
+    width: 84%; height: 84%;
+    object-fit: contain;
+  }
+  .pick .info { flex: 1; min-width: 0; }
+  .pick .tag {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    opacity: 0.8;
+    font-weight: 600;
+  }
+  .pick .pname {
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 2px;
+    line-height: 1.3;
+    color: #f5ead5;
+  }
+  .pick .fabric {
+    font-size: 10px;
+    color: rgba(232, 220, 195, 0.65);
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+  }
+  #result-overlay .cta-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: rise 1s ease 1.2s both;
+  }
+  #result-overlay .cta-row button {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s ease;
+  }
+  #result-overlay .cta-row button:hover { transform: translateY(-1px); background: #e0bf83; }
+  #result-overlay .cta-row button.ghost {
+    background: transparent;
+    color: #e8dcc3;
+    border: 1px solid rgba(245, 234, 213, 0.3);
+  }
+  #result-overlay .cta-row button.ghost:hover { background: rgba(245, 234, 213, 0.08); border-color: var(--gold); }
+  #result-overlay .share-hint {
+    font-size: 11px;
+    color: rgba(245, 234, 213, 0.5);
+    letter-spacing: 0.15em;
+    margin-top: -8px;
+    text-align: center;
+    animation: rise 1.1s ease 1.4s both;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ==== 神牌槽位的金光裝飾 ==== */
+  .slot.trump {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 24px rgba(201,165,107,0.4);
+  }
+  .slot.trump .face .kw { background: linear-gradient(135deg, #6b4423, var(--ink)); }
+
+  /* ==== 占卜禮：神牌版加碼樣式 ==== */
+  #oracle-gift.trump {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px rgba(201,165,107,0.4), 0 0 40px rgba(201,165,107,0.2);
+    background: linear-gradient(160deg, rgba(201,165,107,0.22), rgba(139,90,60,0.12));
+  }
+  #oracle-gift.trump::before {
+    background: var(--gold);
+    color: var(--ink);
+    box-shadow: 0 0 16px rgba(201,165,107,0.6);
+  }
+  #oracle-gift .gift-bonus {
+    display: none;
+    align-items: center;
+    gap: 14px;
+    background: rgba(26,22,18,0.5);
+    border: 1px solid rgba(201,165,107,0.3);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin: 4px 0 6px;
+    text-align: left;
+  }
+  #oracle-gift.trump .gift-bonus { display: flex; }
+  #oracle-gift .gift-bonus img {
+    width: 56px; height: 56px;
+    object-fit: contain;
+    flex-shrink: 0;
+    background: rgba(245,234,213,0.06);
+    border-radius: 8px;
+    padding: 4px;
+  }
+  #oracle-gift .gift-bonus .bonus-text { flex: 1; min-width: 0; }
+  #oracle-gift .gift-bonus .bonus-tag {
+    font-size: 9px; letter-spacing: 0.3em;
+    color: var(--gold);
+    font-weight: 700;
+  }
+  #oracle-gift .gift-bonus .bonus-name {
+    font-size: 14px;
+    color: #f5ead5;
+    margin: 2px 0 1px;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+  }
+  #oracle-gift .gift-bonus .bonus-note {
+    font-size: 10px;
+    color: rgba(245,234,213,0.55);
+    letter-spacing: 0.1em;
+  }
+  #oracle-gift .gift-store-hint {
+    font-size: 11px;
+    color: rgba(245,234,213,0.6);
+    letter-spacing: 0.12em;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(201,165,107,0.18);
+  }
+
+  /* ==== 分享預覽 Modal ==== */
+  #share-modal {
+    position: fixed; inset: 0;
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  #share-modal.show { display: flex; }
+  #share-modal .sm-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(8, 5, 2, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  #share-modal .sm-content {
+    position: relative;
+    max-width: 460px;
+    width: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  #share-modal .sm-close {
+    position: absolute;
+    top: -2px; right: -2px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+    font-family: inherit;
+    z-index: 2;
+  }
+  #share-modal .sm-tip {
+    background: var(--gold);
+    color: var(--ink);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 100%;
+    box-shadow: 0 6px 18px rgba(201,165,107,0.4);
+  }
+  #share-modal .sm-preview {
+    max-width: 100%;
+    max-height: calc(100vh - 220px);
+    width: auto; height: auto;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    /* 允許 iOS 長按出現「加入照片」選單 */
+    user-select: auto;
+    -webkit-user-select: auto;
+    -webkit-touch-callout: default;
+    pointer-events: auto;
+  }
+  #share-modal .sm-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #share-modal .sm-actions button {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 11px 22px;
+    border-radius: 999px;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s ease;
+  }
+  #share-modal .sm-actions button:hover { transform: translateY(-1px); }
+  #share-modal .sm-actions button.ghost {
+    background: transparent;
+    color: #f5ead5;
+    border: 1px solid rgba(245,234,213,0.4);
+  }
+
+  /* ==== Fallback 分享 Modal（無 navigator.share / clipboard 時用） ==== */
+  #fallback-share {
+    position: fixed; inset: 0;
+    z-index: 250;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #fallback-share.show { display: flex; }
+  #fallback-share .fs-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(8, 5, 2, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  #fallback-share .fs-content {
+    position: relative;
+    background: linear-gradient(180deg, #2a1d14 0%, #1a1208 100%);
+    border: 1px solid rgba(201,165,107,0.3);
+    border-radius: 18px;
+    padding: 28px 22px 22px;
+    max-width: 360px;
+    width: 100%;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #fallback-share .fs-close {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #f5ead5;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    font-family: inherit;
+  }
+  #fallback-share .fs-title {
+    color: #f5ead5;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-align: center;
+    padding: 0 28px;
+  }
+  #fallback-share .fs-sub {
+    color: rgba(245,234,213,0.65);
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: center;
+    margin-top: -6px;
+  }
+  #fallback-share .fs-link {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(201,165,107,0.3);
+    color: #f5ead5;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", monospace;
+    -webkit-user-select: all;
+    user-select: all;
+    text-overflow: ellipsis;
+  }
+  #fallback-share .fs-actions {
+    display: flex;
+    gap: 8px;
+  }
+  #fallback-share .fs-actions > * {
+    flex: 1;
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 12px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    text-decoration: none;
+    transition: all .18s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #fallback-share .fs-actions > *:active { transform: translateY(1px); }
+  #fallback-share .fs-actions .fs-line {
+    background: #06c755;
+    color: #fff;
+  }
+  #fallback-share .fs-copy.copied {
+    background: #4a7c52;
+    color: #fff;
+  }
+
+  /* ==== 分享卡片（色塊大字版 · 1080×1080）== JS 設 --pa-* 變數 ==== */
+  /* 注意：避免 color-mix() / oklch / 現代 CSS（html2canvas 不支援），用 rgba(var(--r,--g,--b), a) */
+  #share-card {
+    position: fixed;
+    left: -99999px; top: 0;
+    width: 1080px; height: 1080px;
+    --pa-from: #2a1d14;
+    --pa-to: #100c08;
+    --pa-accent: #d4a678;
+    --pa-text: #f5ead5;
+    --pa-accent-r: 212; --pa-accent-g: 166; --pa-accent-b: 120;
+    --pa-text-r: 245; --pa-text-g: 234; --pa-text-b: 213;
+    background: linear-gradient(160deg, var(--pa-from) 0%, var(--pa-to) 100%);
+    color: var(--pa-text);
+    padding: 100px 90px 90px;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    font-family: "Noto Serif TC", "Songti TC", "PingFang TC", serif;
+    z-index: -1;
+    overflow: hidden;
+    text-align: center;
+  }
+  #share-card::before {
+    content: "";
+    position: absolute;
+    inset: 40px;
+    border: 1px solid rgba(var(--pa-accent-r), var(--pa-accent-g), var(--pa-accent-b), 0.3);
+    border-radius: 24px;
+    pointer-events: none;
+  }
+  #share-card .sc-top { width: 100%; }
+  #share-card .sc-brand {
+    font-size: 18px; letter-spacing: 0.55em;
+    color: var(--pa-accent);
+    font-weight: 500;
+    opacity: 0.9;
+  }
+  #share-card .sc-trump-mark {
+    display: none;
+    margin: 18px auto 0;
+    color: var(--pa-accent);
+    border: 1px solid var(--pa-accent);
+    background: rgba(var(--pa-accent-r), var(--pa-accent-g), var(--pa-accent-b), 0.15);
+    padding: 5px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    letter-spacing: 0.4em;
+    font-weight: 700;
+    width: fit-content;
+  }
+  #share-card.trump .sc-trump-mark { display: block; }
+
+  /* 主視覺：超大原型名 */
+  #share-card .sc-hero { width: 100%; }
+  #share-card .sc-hero-prefix {
+    font-size: 22px;
+    color: rgba(var(--pa-text-r), var(--pa-text-g), var(--pa-text-b), 0.7);
+    letter-spacing: 0.4em;
+    margin-bottom: 28px;
+  }
+  #share-card .sc-hero-name {
+    font-size: 200px;
+    font-weight: 600;
+    color: var(--pa-accent);
+    letter-spacing: 0.14em;
+    line-height: 1.05;
+  }
+  #share-card .sc-hero-sub {
+    font-size: 36px;
+    color: var(--pa-text);
+    letter-spacing: 0.16em;
+    margin-top: 18px;
+    font-weight: 400;
+  }
+
+  /* 三個關鍵字 tag */
+  #share-card .sc-tags {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  #share-card .sc-tag {
+    background: rgba(var(--pa-accent-r), var(--pa-accent-g), var(--pa-accent-b), 0.18);
+    border: 1px solid rgba(var(--pa-accent-r), var(--pa-accent-g), var(--pa-accent-b), 0.5);
+    color: var(--pa-text);
+    padding: 12px 26px;
+    border-radius: 999px;
+    font-size: 22px;
+    letter-spacing: 0.18em;
+    font-weight: 500;
+  }
+
+  /* 敘事 */
+  #share-card .sc-narrative {
+    font-size: 26px;
+    line-height: 1.85;
+    color: rgba(var(--pa-text-r), var(--pa-text-g), var(--pa-text-b), 0.85);
+    max-width: 760px; margin: 0 auto;
+    letter-spacing: 0.06em;
+    font-weight: 400;
+  }
+
+  /* 邀請語 */
+  #share-card .sc-invite-block {
+    width: 100%;
+  }
+  #share-card .sc-divider {
+    width: 80px;
+    height: 1px;
+    background: var(--pa-accent);
+    margin: 0 auto 30px;
+    opacity: 0.6;
+  }
+  #share-card .sc-invite-text {
+    font-size: 38px;
+    color: var(--pa-accent);
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  /* 浮水印 */
+  #share-card .sc-watermark {
+    width: 100%;
+  }
+  #share-card .sc-mark-text {
+    font-size: 13px;
+    color: rgba(var(--pa-text-r), var(--pa-text-g), var(--pa-text-b), 0.55);
+    letter-spacing: 0.5em;
+    margin-bottom: 6px;
+  }
+  #share-card .sc-mark-url {
+    font-size: 18px;
+    color: var(--pa-accent);
+    letter-spacing: 0.32em;
+    font-weight: 500;
+  }
+
+  /* ==== 響應式 ==== */
+  @media (max-width: 640px) {
+    #overlay { padding-top: max(14px, env(safe-area-inset-top)); }
+    #overlay h1 { line-height: 1.5; }
+    #slots { gap: 8px; padding: 0 12px; top: 120px; }
+    .slot { width: 22vw; max-width: 92px; }
+    .controls { top: 8px; right: 8px; }
+    .controls button { padding: 7px 12px; font-size: 11px; }
+    #hint { font-size: 10px; letter-spacing: 0.14em; }
+    #result-overlay { padding: 24px 16px; gap: 20px; }
+    .pick { min-width: 140px; }
+    #oracle-gift { padding: 22px 20px 20px; }
+    #oracle-gift .gift-title { font-size: 20px; }
+    #oracle-gift .gift-cta { padding: 12px 26px; font-size: 13px; }
+  }
+
+  /* 結果揭曉時，物理場淡出 */
+  #stage.frozen { opacity: 0.18; filter: blur(3px); transition: all .5s ease; pointer-events: none; }
+  #slots.frozen { opacity: 0.2; transition: opacity .5s ease; }
+</style>
+</head>
+<body>
+  <div id="stage"></div>
+
+  <div id="overlay">
+    <div class="brand">ASIFY · BODY ORACLE</div>
+    <h1>今日身體占卜</h1>
+    <div class="subline">撿三件為妳說話</div>
+    <div class="counter" id="counter">還要撿 3 件</div>
+  </div>
+
+  <div id="slots">
+    <div class="slot" data-role="0"><div class="role">身</div><div class="role-en">BODY</div></div>
+    <div class="slot" data-role="1"><div class="role">心</div><div class="role-en">MIND</div></div>
+    <div class="slot" data-role="2"><div class="role">意</div><div class="role-en">INTENT</div></div>
+  </div>
+
+  <div class="controls">
+    <button id="reset-btn" style="display:none">重新占卜</button>
+    <button id="shop-all">逛全部</button>
+  </div>
+
+  <div id="hint">
+    拖曳 <span class="dot">·</span> 點一下撿起 <span class="dot">·</span> 三件成卦
+  </div>
+
+  <!-- ====== 結果覆蓋層 ====== -->
+  <div id="result-overlay" role="dialog" aria-live="polite">
+    <div class="result-label">今日解讀</div>
+    <div class="result-title">妳今天是 <span class="archetype-name" id="arc-name">—</span></div>
+    <div class="trio" id="trio"></div>
+    <div class="narrative" id="narrative">—</div>
+    <div class="picks-header">
+      <div class="picks-title">根據妳今天的占卜，幫妳挑了這兩件</div>
+    </div>
+    <div class="picks" id="picks"></div>
+    <div id="oracle-gift">
+      <div class="gift-label">今日占卜禮</div>
+      <div class="gift-title" id="gift-title">ASify 官網任選 <span class="rate">88折</span></div>
+      <div class="gift-sub" id="gift-sub">讓妳帶走今天的「占卜結果」</div>
+      <div class="gift-bonus" id="gift-bonus">
+        <img src="assets/products/socks-island-brown.png" alt="止滑襪 島嶼棕">
+        <div class="bonus-text">
+          <div class="bonus-tag">✦ 神牌贈品</div>
+          <div class="bonus-name">止滑襪 · 島嶼棕</div>
+          <div class="bonus-note">即將上市 · 下單同享</div>
+        </div>
+      </div>
+      <div class="gift-code-row">
+        <div class="gift-code" id="gift-code-btn">
+          <span class="ct-lbl">優惠碼</span>
+          <span class="ct-val" id="gift-code-txt">oracle88</span>
+          <span class="ct-icon">⧉ 複製</span>
+        </div>
+        <div class="gift-until">效期至 <span id="gift-until">2026/05/03</span></div>
+      </div>
+      <a class="gift-cta" id="gift-cta" href="#" target="_blank" rel="noopener">前往 ASify 官網 →</a>
+      <div class="gift-store-hint" id="gift-store-hint">門市出示此頁享同折扣</div>
+      <button class="gift-invite" id="gift-invite">邀請朋友也來占卜 ↗</button>
+    </div>
+    <div class="cta-row">
+      <button id="share-btn">分享解讀 ✦</button>
+      <button class="ghost" id="reoracle-btn">再占一次</button>
+    </div>
+    <div class="share-hint">按下，邀她一起占卜 ✦</div>
+  </div>
+
+
+  <!-- ====== 分享預覽 Modal（按下「分享解讀」後出現） ====== -->
+  <div id="share-modal">
+    <div class="sm-backdrop" id="sm-backdrop"></div>
+    <div class="sm-content">
+      <button class="sm-close" id="sm-close" aria-label="關閉">×</button>
+      <div class="sm-tip">長按這張存下來，傳給想一起上瑜伽的她 ✦</div>
+      <img id="sm-preview" class="sm-preview" alt="今日占卜結果">
+      <div class="sm-actions">
+        <button id="sm-share">邀請朋友來占卜 ↗</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Fallback 分享 Modal（沒有原生分享/剪貼簿時用） ====== -->
+  <div id="fallback-share" role="dialog" aria-modal="true">
+    <div class="fs-backdrop" id="fs-backdrop"></div>
+    <div class="fs-content">
+      <button class="fs-close" id="fs-close" aria-label="關閉">×</button>
+      <div class="fs-title">邀請朋友一起占卜 ✦</div>
+      <div class="fs-sub">把這個連結傳給想跟妳練瑜伽的她</div>
+      <input class="fs-link" id="fs-link" readonly>
+      <div class="fs-actions">
+        <button class="fs-copy" id="fs-copy">複製連結</button>
+        <a class="fs-line" id="fs-line" target="_blank" rel="noopener">用 LINE 傳</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 分享卡片（色塊大字版 · 1080×1080） ====== -->
+  <div id="share-card">
+    <div class="sc-top">
+      <div class="sc-brand">✦ ASIFY × ORACLE ✦</div>
+      <div class="sc-trump-mark" id="sc-trump-mark">神牌加持</div>
+    </div>
+
+    <div class="sc-hero">
+      <div class="sc-hero-prefix">我今天是</div>
+      <div class="sc-hero-name" id="sc-arc-name">—</div>
+      <div class="sc-hero-sub" id="sc-arc-sub">—</div>
+    </div>
+
+    <div class="sc-tags" id="sc-tags"></div>
+
+    <div class="sc-narrative" id="sc-narrative">—</div>
+
+    <div class="sc-invite-block">
+      <div class="sc-divider"></div>
+      <div class="sc-invite-text" id="sc-invite">—</div>
+    </div>
+
+    <div class="sc-watermark">
+      <div class="sc-mark-text">換妳占一張</div>
+      <div class="sc-mark-url">www.as-for-me.com</div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+/* ============================================================
+   CONFIG — 15 件商品牌庫
+   ============================================================ */
+const BASE_URL   = 'https://www.as-for-me.com';
+const ORACLE_URL = BASE_URL + '/oracle';
+
+const PRODUCTS = [
+  { slug:'ten-black',            name:'十分褲',        sub:'DEEP BLACK · 緊Q果凍布',    url:BASE_URL+'/products/ten-black-jelly',
+    body:['包覆','壓實'],          mind:['專注','沉著'],          intent:['核心訓練','hold住','守住'],              arc:1,
+    feat:['前縫線壓腹','防滑條視覺增高10cm','緊束包覆收肉'] },
+  { slug:'ten-turquoise',        name:'十分褲',        sub:'松石綠 · 緊Q果凍布',       url:BASE_URL+'/products/ten-turquoise-jelly',
+    body:['輕快','顯色'],          mind:['清新','想被看見'],       intent:['晨瑜伽','散步','戶外活動'],              arc:3,
+    feat:['前縫線壓腹','防滑條視覺增高','果凍布視覺顯瘦3公斤'] },
+  { slug:'nine-midnight',        name:'九分褲',        sub:'午夜藍 · 軟軟奶油布 2.0',    url:BASE_URL+'/products/nine-midnight',
+    body:['包覆','深邃'],          mind:['神秘','沉著'],          intent:['低調','不張揚'],                          arc:1,
+    feat:['俐落腳踝線條','雷射切割褲管','強力抗臭流汗不臭'] },
+  { slug:'seamless-nine-island', name:'無縫九分褲',    sub:'島嶼棕 · 緊Q果凍布',       url:BASE_URL+'/products/seamless-nine-island',
+    body:['包覆','溫潤'],          mind:['踏實','安定'],          intent:['旅行','落地'],                            arc:6,
+    feat:['無縫前片','果凍布緊束包覆','雷射切割褲管'] },
+  { slug:'pocket-nine-cappuccino',name:'無縫口袋九分褲',sub:'卡布奇諾 · 綿柔慕斯布',     url:BASE_URL+'/products/pocket-nine-cappuccino',
+    body:['柔軟','棉柔'],          mind:['溫暖','放鬆'],          intent:['一個人出門','遛小孩'],                    arc:2,
+    feat:['無縫口袋','慕斯布棉柔裸感','第二層肌膚般輕盈'] },
+  { slug:'pocket-shorts-ebony',  name:'無縫口袋五分褲',sub:'烏木灰 · 綿柔慕斯布',       url:BASE_URL+'/products/pocket-shorts-ebony',
+    body:['透氣','沉靜'],          mind:['低調','中性'],          intent:['週末','不張揚'],                          arc:2,
+    feat:['無縫雙口袋','視覺增高5cm','透氣包覆不緊繃'] },
+  { slug:'flare-black',          name:'紐約喇叭褲',    sub:'溫柔黑 · 綿柔慕斯布',       url:BASE_URL+'/products/flare-black-mousse',
+    body:['延伸','拉長'],          mind:['優雅','從容'],          intent:['舞蹈','扭轉','延展'],                     arc:5,
+    feat:['黃金比例3:5版型','膝線拉高腿線延長','棉柔彈性可客製貼合'] },
+  { slug:'wide-leg-moss',        name:'闊腿褲',        sub:'苔蘚綠 · 厚版慕斯布',       url:BASE_URL+'/products/wide-leg-moss',
+    body:['寬鬆','自在'],          mind:['自然','呼吸感'],         intent:['伸展','居家修復','想放鬆'],               arc:2,
+    feat:['高腰顯瘦','闊腿版型','日常也能穿的瑜伽褲'] },
+  { slug:'bra-free-black',       name:'自由呼吸 BRA',  sub:'深邃黑 · 緊Q果凍布',       url:BASE_URL+'/products/bra-free-black',
+    body:['支撐','托高'],          mind:['勇敢','面對'],          intent:['高強度','跑步','跳舞'],                   arc:4,
+    feat:['零副乳設計','高支撐','上薄下厚胸墊自然托高'] },
+  { slug:'bra-butterfly-plum',   name:'蝴蝶 X 薄背 BRA',sub:'黛紫 · 緊Q果凍布',         url:BASE_URL+'/products/bra-butterfly-plum',
+    body:['薄透','貼背'],          mind:['高貴','內斂'],          intent:['瑜伽','露美背'],                          arc:5,
+    feat:['蝴蝶貼合肩胛骨','薄背魔法穩定上半身','上薄下厚胸墊'] },
+  { slug:'bratop-iris-island',   name:'Iris 彩虹女神 Bra Top', sub:'島嶼棕 · 緊Q果凍布', url:BASE_URL+'/products/bratop-iris-island',
+    body:['飽滿','溫潤'],          mind:['自信','沉穩'],          intent:['瑜伽課','皮拉提斯','流動課'],             arc:5,
+    feat:['上薄下厚胸墊','編織肩帶修飾背部','自然飽滿自信發光'] },
+  { slug:'bratop-grace-black',   name:'Grace 優雅女神 Bra Top',sub:'黑 · 長版 · 布丁果凍布', url:BASE_URL+'/products/bratop-grace-black',
+    body:['藏拙','包覆肚'],        mind:['被接住','安心'],        intent:['生理期','不想被看見'],                    arc:2,
+    feat:['長版藏胸藏肚','布丁果凍布涼感','修身不緊繃'] },
+  { slug:'bratop-victoria-purple',name:'Victoria 方領 Bra',sub:'紫 · 羅紋針織布',          url:BASE_URL+'/products/bratop-victoria-purple',
+    body:['修身','方領'],          mind:['優雅','內斂'],          intent:['低衝擊','拉筋','日常訓練'],              arc:5,
+    feat:['方領顯臉小','寬肩帶不露副乳','羅紋針織1.3倍厚度'] },
+  { slug:'top-mystory-pink',     name:'小物語上衣',    sub:'粉色 · 網紗輕薄布',         url:BASE_URL+'/products/top-mystory-pink',
+    body:['輕盈','網紗'],          mind:['甜美','俏皮'],          intent:['戶外瑜伽','晨間拉筋','多層次'],           arc:3,
+    feat:['網紗設計','運動後罩衫','柔軟透氣'] },
+  { slug:'windbreaker-black',    name:'風和日麗風衣',  sub:'黑 · 抗UV50+ · 輕薄尼龍',   url:BASE_URL+'/products/windbreaker-black',
+    body:['輕如無物','防護'],      mind:['自由','冒險'],          intent:['戶外','旅行','出走'],                     arc:6,
+    feat:['僅200克超輕','UV50+防曬認證','腰線可調顯瘦'] },
+];
+
+/* 占卜禮（兩版：普通 / 神牌加持）*/
+const ORACLE_GIFT = {
+  normal: {
+    code: 'oracle88',
+    rate: '88',
+    title: 'ASify 官網任選 88 折',
+    bonus: null,
+  },
+  trump: {
+    code: 'socks',
+    rate: '88',
+    title: '神牌加持 ✦ ASify 官網任選 88 折',
+    bonus: '下單即贈即將上市的止滑襪 · 島嶼棕',
+    bonusImage: 'assets/products/socks-island-brown.png',
+  },
+  until: '2026/05/03',                  // 效期：寫死，過期延長要重新部署
+};
+
+/* 原型（id: 1-6）— 運動場景導向 */
+const ARCHETYPES = [
+  { id:1, name:'核心型', subtitle:'今天要 hold 住',
+    keywords:['包覆','壓實','貼合','專注','沉著','hold住','守住','深邃','核心訓練','深蹲','跳躍'],
+    primary:'ten-black', secondary:'bra-free-black',
+    narrative:'妳今天要深蹲、跳躍、收緊核心。選一條夠緊的褲子，替妳壓住一切動作。',
+    invite:'要不要跟我一起練核心？',
+    palette:{ from:'#3a2820', to:'#1a0e08', accent:'#d4a678', text:'#f5ead5' } },
+  { id:2, name:'修復型', subtitle:'今天要攤平',
+    keywords:['寬鬆','自在','柔軟','棉柔','透氣','藏拙','包覆肚','鬆','自然','呼吸感','放鬆','伸展','居家修復','被接住','安心','生理期','不想被看見','低調','不張揚','沉靜','中性','週末'],
+    primary:'wide-leg-moss', secondary:'bratop-grace-black',
+    narrative:'妳今天只想伸展、攤在墊上呼吸。挑一條會跟妳一起鬆的褲子。',
+    invite:'要不要跟我一起躺平？',
+    palette:{ from:'#e8dcc8', to:'#c2a87e', accent:'#5a3f2a', text:'#2a1d14' } },
+  { id:3, name:'有氧型', subtitle:'今天要動起來',
+    keywords:['輕快','輕盈','顯色','網紗','甜美','俏皮','清新','想被看見','晨瑜伽','散步','戶外活動','戶外瑜伽','晨間拉筋','多層次'],
+    primary:'ten-turquoise', secondary:'top-mystory-pink',
+    narrative:'妳今天想輕量上場 — 晨瑜伽、散步、戶外拉筋。挑顏色最亮的那一件。',
+    invite:'要不要跟我一起動一動？',
+    palette:{ from:'#fae8d4', to:'#f0b878', accent:'#a05a2a', text:'#3a1f0e' } },
+  { id:4, name:'爆發型', subtitle:'今天要流汗',
+    keywords:['支撐','托高','勇敢','面對','高強度','跑步','跳舞'],
+    primary:'bra-free-black', secondary:'ten-black',
+    narrative:'妳今天要流一身汗。該托的托住，該壓的壓實，把自己丟到場上。',
+    invite:'要不要跟我一起流一身汗？',
+    palette:{ from:'#5a2418', to:'#1f0a06', accent:'#f0a060', text:'#fce8d0' } },
+  { id:5, name:'流動型', subtitle:'今天要扭轉',
+    keywords:['延伸','拉長','薄透','貼背','修身','方領','飽滿','自信','沉穩','優雅','內斂','從容','高貴','舞蹈','扭轉','延展','瑜伽','瑜伽課','流動課','皮拉提斯','露美背','低衝擊','拉筋','日常訓練'],
+    primary:'bratop-iris-island', secondary:'flare-black',
+    narrative:'妳今天是流動瑜伽、是舞蹈墊上的自己。挑一件會跟身體一起扭轉的。',
+    invite:'要不要跟我一起上瑜伽？',
+    palette:{ from:'#3a2848', to:'#1a0e22', accent:'#c4a8d4', text:'#f0e4f5' } },
+  { id:6, name:'戶外型', subtitle:'今天要出門',
+    keywords:['冒險','輕如無物','防護','自由','踏實','安定','旅行','出走','溫潤','落地','戶外','健行'],
+    primary:'windbreaker-black', secondary:'seamless-nine-island',
+    narrative:'妳今天不想待在墊上 — 山路、郊外、隨時彎腰拍一朵花。一件能塞進包包的風衣。',
+    invite:'要不要跟我一起出門走走？',
+    palette:{ from:'#2a4838', to:'#0e1a14', accent:'#a0c89e', text:'#e4f2dc' } },
+];
+
+const ROLE_CHN = ['身','心','意'];
+const ROLE_EN  = ['BODY','MIND','INTENT'];
+
+const SPAWN_INTERVAL_MS = 4500;
+const MAX_ITEMS         = 22;
+const TRUMP_RATE        = 0.08;   // 每次 spawn 成為王牌機率
+const MAX_TRUMPS        = 1;      // 同時最多一張王牌
+
+/* ============================================================
+   State
+   ============================================================ */
+const state = {
+  picked: [null, null, null],  // 對應 [身, 心, 意]，可任意順序填
+  frozen: false,
+  currentArchetype: null,
+  currentGift: null,
+  hasTrump: false,
+  trumpUsed: 0,
+};
+function pickedCount() { return state.picked.filter(Boolean).length; }
+function pickedAll()   { return state.picked.every(Boolean); }
+function nextEmptyRole() {
+  for (let i=0; i<3; i++) if (!state.picked[i]) return i;
+  return -1;
+}
+
+/* ============================================================
+   Matter.js engine (no renderer)
+   ============================================================ */
+const { Engine, Runner, Bodies, Body, Composite } = Matter;
+
+const stage = document.getElementById('stage');
+const slotsEl = document.getElementById('slots');
+const slotEls = Array.from(document.querySelectorAll('.slot'));
+const counterEl = document.getElementById('counter');
+const resetBtn = document.getElementById('reset-btn');
+const hintEl = document.getElementById('hint');
+const overlayEl = document.getElementById('overlay');
+
+let W = window.innerWidth;
+let H = window.innerHeight;
+
+const engine = Engine.create({ gravity: { x: 0, y: 1, scale: 0.0014 } });
+const world = engine.world;
+
+let ground, leftWall, rightWall, ceiling;
+function buildWalls() {
+  if (ground) Composite.remove(world, [ground, leftWall, rightWall, ceiling]);
+  const t = 100;
+  ground    = Bodies.rectangle(W/2, H + t/2 - 2, W*3, t, { isStatic:true, friction:0.7, restitution:0.15 });
+  leftWall  = Bodies.rectangle(-t/2, H/2, t, H*4, { isStatic:true, restitution:0.3 });
+  rightWall = Bodies.rectangle(W + t/2, H/2, t, H*4, { isStatic:true, restitution:0.3 });
+  ceiling   = Bodies.rectangle(W/2, -H*2, W*3, t, { isStatic:true });
+  Composite.add(world, [ground, leftWall, rightWall, ceiling]);
+}
+buildWalls();
+
+Runner.run(Runner.create(), engine);
+
+/* ============================================================
+   Items (Matter body + DOM)
+   ============================================================ */
+const items = [];
+
+function sizeForViewport() {
+  const base = Math.min(W, H);
+  const small = base < 600;
+  const w = small ? 82 + Math.random()*20 : 108 + Math.random()*40;
+  const h = w * (1.32 + Math.random()*0.08);
+  return { w, h };
+}
+
+function spawnItem(product, opts={}) {
+  if (!product) product = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
+  if (items.length >= MAX_ITEMS) {
+    const oldest = items.shift();
+    Composite.remove(world, oldest.body);
+    oldest.el.remove();
+  }
+
+  const { w, h } = sizeForViewport();
+  const x = opts.x ?? (70 + Math.random()*(W-140));
+  const y = opts.y ?? (-h - 40 - Math.random()*260);
+
+  let isTrump = opts.trump ?? false;
+  if (!isTrump && state.trumpUsed < MAX_TRUMPS && Math.random() < TRUMP_RATE) {
+    isTrump = true;
+    state.trumpUsed++;
+  }
+
+  const body = Bodies.rectangle(x, y, w, h, {
+    chamfer:{ radius:12 },
+    restitution:0.36, friction:0.5, frictionAir:0.012, density:0.0018,
+    angle:(Math.random()-0.5)*Math.PI*0.6,
+  });
+  Body.setAngularVelocity(body, (Math.random()-0.5)*0.08);
+  Body.setVelocity(body, { x:(Math.random()-0.5)*2.4, y:1+Math.random()*2 });
+  Composite.add(world, body);
+
+  const el = document.createElement('div');
+  el.className = 'product' + (isTrump ? ' trump' : '');
+  el.style.width = w+'px';
+  el.style.height = h+'px';
+  el.innerHTML = `
+    <div class="card">
+      <div class="imgwrap">
+        <img src="assets/products/${product.slug}.png" alt="${product.name}" draggable="false">
+      </div>
+      <div class="name">${product.name}<span class="sub">${product.sub.split(' · ')[0]}</span></div>
+    </div>
+  `;
+  stage.appendChild(el);
+
+  const item = { body, el, product, w, h, isTrump };
+  items.push(item);
+  body.plugin = { item };
+  return item;
+}
+
+// 初始掉一批
+(function initialDrop() {
+  const n = W < 600 ? 8 : 11;
+  for (let i=0;i<n;i++) setTimeout(() => spawnItem(), i*170);
+})();
+
+setInterval(() => {
+  if (!state.frozen && items.length < MAX_ITEMS - 2) spawnItem();
+}, SPAWN_INTERVAL_MS);
+
+function syncDOM() {
+  for (const it of items) {
+    if (it.flying) continue;
+    const { body, el, w, h } = it;
+    el.style.transform = `translate3d(${body.position.x - w/2}px, ${body.position.y - h/2}px, 0) rotate(${body.angle}rad)`;
+  }
+  requestAnimationFrame(syncDOM);
+}
+requestAnimationFrame(syncDOM);
+
+/* ============================================================
+   拖曳 / 丟擲 / 點擊
+   ============================================================ */
+const DRAG_THRESHOLD = 8;
+const CLICK_TIME_MAX = 380;
+let drag = null;
+
+stage.addEventListener('pointerdown', (e) => {
+  if (state.frozen) return;
+  if (e.target.closest('.controls, #result-overlay, #overlay')) return;
+  const el = e.target.closest('.product');
+  if (!el) return;
+  const it = items.find(i => i.el === el);
+  if (!it || it.flying) return;
+
+  e.preventDefault();
+  stage.setPointerCapture?.(e.pointerId);
+  drag = {
+    item: it, pointerId: e.pointerId,
+    offsetX: e.clientX - it.body.position.x,
+    offsetY: e.clientY - it.body.position.y,
+    startX: e.clientX, startY: e.clientY,
+    lastX: e.clientX, lastY: e.clientY,
+    lastTime: performance.now(), startTime: performance.now(),
+    vx:0, vy:0, moved:false,
+  };
+  it.el.classList.add('dragging');
+  Body.setStatic(it.body, true);
+});
+
+function findSlotIndexAt(x, y) {
+  for (let i = 0; i < slotEls.length; i++) {
+    if (state.picked[i]) continue;          // 已填的格不能再放
+    const r = slotEls[i].getBoundingClientRect();
+    // 加 12px 放鬆判定（手指/滑鼠不用對得太準）
+    if (x >= r.left - 12 && x <= r.right + 12 &&
+        y >= r.top - 12 && y <= r.bottom + 12) return i;
+  }
+  return -1;
+}
+
+function clearSlotHover() {
+  slotEls.forEach(s => s.classList.remove('drop-hover'));
+}
+
+stage.addEventListener('pointermove', (e) => {
+  if (!drag || e.pointerId !== drag.pointerId) return;
+  e.preventDefault();
+  const now = performance.now();
+  const dt = Math.max(1, now - drag.lastTime);
+  drag.vx = (e.clientX - drag.lastX) / dt * 16;
+  drag.vy = (e.clientY - drag.lastY) / dt * 16;
+  Body.setPosition(drag.item.body, {
+    x: e.clientX - drag.offsetX,
+    y: e.clientY - drag.offsetY,
+  });
+  drag.lastX = e.clientX; drag.lastY = e.clientY; drag.lastTime = now;
+  if (!drag.moved) {
+    const dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+    if (dx*dx + dy*dy > DRAG_THRESHOLD*DRAG_THRESHOLD) drag.moved = true;
+  }
+  // 拖曳中：偵測上方是否懸停在 slot 上
+  if (drag.moved) {
+    const idx = findSlotIndexAt(e.clientX, e.clientY);
+    clearSlotHover();
+    if (idx !== -1) slotEls[idx].classList.add('drop-hover');
+  }
+});
+
+function endDrag(e) {
+  if (!drag) return;
+  if (e.pointerId !== undefined && e.pointerId !== drag.pointerId) return;
+  const d = drag; drag = null;
+  d.item.el.classList.remove('dragging');
+  clearSlotHover();
+  Body.setStatic(d.item.body, false);
+
+  // 點擊（沒移動）→ 自動填下一個空格
+  if (!d.moved && (performance.now() - d.startTime) < CLICK_TIME_MAX) {
+    onItemPick(d.item);
+    return;
+  }
+
+  // 拖曳結束：判斷是否丟在 slot 上
+  const targetIdx = findSlotIndexAt(e.clientX, e.clientY);
+  if (targetIdx !== -1) {
+    onItemPick(d.item, targetIdx);
+    return;
+  }
+
+  // 沒丟到任何 slot → 物理恢復繼續掉
+  const vx = Math.max(-32, Math.min(32, d.vx));
+  const vy = Math.max(-32, Math.min(32, d.vy));
+  Body.setVelocity(d.item.body, { x:vx, y:vy });
+  Body.setAngularVelocity(d.item.body, (Math.random()-0.5)*0.18);
+}
+stage.addEventListener('pointerup', endDrag);
+stage.addEventListener('pointercancel', endDrag);
+
+/* ============================================================
+   撿牌：核心占卜流程
+   ============================================================ */
+function onItemPick(item, targetRoleIdx) {
+  if (state.frozen) return;
+  if (pickedAll()) return;
+
+  // 拖曳指定格位 → 必須是空格；點擊（無指定）→ 自動填下一個空的
+  let roleIdx;
+  if (typeof targetRoleIdx === 'number' && targetRoleIdx >= 0 && targetRoleIdx < 3) {
+    if (state.picked[targetRoleIdx]) return;  // 已填，不覆蓋
+    roleIdx = targetRoleIdx;
+  } else {
+    roleIdx = nextEmptyRole();
+    if (roleIdx === -1) return;
+  }
+
+  const keyword = pickKeywordForRole(item.product, roleIdx);
+  state.picked[roleIdx] = { item, keyword, isTrump: !!item.isTrump };
+  updateCounter();
+  flyToSlot(item, roleIdx, keyword, !!item.isTrump);
+
+  if (pickedAll()) {
+    setTimeout(() => showResult(), 1400);
+  }
+}
+
+function pickKeywordForRole(product, roleIdx) {
+  const pool = [product.body, product.mind, product.intent][roleIdx];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function updateCounter() {
+  const remain = 3 - pickedCount();
+  if (remain === 0) counterEl.textContent = '揭曉中…';
+  else counterEl.textContent = `還要撿 ${remain} 件`;
+}
+
+function flyToSlot(item, roleIdx, keyword, isTrump) {
+  const slot = slotEls[roleIdx];
+  const slotRect = slot.getBoundingClientRect();
+  const el = item.el;
+  item.flying = true;
+
+  // 從 world 移除（停止物理影響）
+  Composite.remove(world, item.body);
+  items.splice(items.indexOf(item), 1);
+
+  const startX = item.body.position.x - item.w/2;
+  const startY = item.body.position.y - item.h/2;
+  const scale = slotRect.width / item.w;
+  const targetX = slotRect.left;
+  const targetY = slotRect.top;
+
+  el.classList.add('flying');
+  el.style.transformOrigin = '0 0';
+  el.style.transition = 'none';
+  el.style.transform = `translate3d(${startX}px, ${startY}px, 0) scale(1) rotate(0rad)`;
+
+  requestAnimationFrame(() => {
+    el.style.transition = '';
+    el.style.transform = `translate3d(${targetX}px, ${targetY}px, 0) scale(${scale}) rotate(0rad)`;
+  });
+
+  setTimeout(() => {
+    el.remove();
+    slot.classList.add('filled');
+    if (isTrump) slot.classList.add('trump');
+    slot.innerHTML = `
+      <div class="placed">
+        <div class="back"></div>
+        <div class="face">
+          <div class="imgwrap"><img src="assets/products/${item.product.slug}.png" alt=""></div>
+          <div class="kw">${isTrump ? '✦ ' : ''}${keyword}</div>
+        </div>
+      </div>
+    `;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => slot.classList.add('revealed'));
+    });
+  }, 780);
+}
+
+/* ============================================================
+   結果演算：9 關鍵字 → 命中最多的原型
+   ============================================================ */
+function computeArchetype(picked) {
+  const filled = picked.filter(Boolean);
+  const all = filled.flatMap(p => [
+    ...p.item.product.body,
+    ...p.item.product.mind,
+    ...p.item.product.intent,
+  ]);
+  let best = null, bestScore = -1;
+  for (const arc of ARCHETYPES) {
+    const score = all.filter(kw => arc.keywords.includes(kw)).length;
+    if (score > bestScore) { bestScore = score; best = arc; }
+  }
+  // tiebreak：0 命中時退回第一張牌的 arc
+  if (bestScore === 0 && filled[0]) {
+    best = ARCHETYPES.find(a => a.id === filled[0].item.product.arc) || best;
+  }
+  return best;
+}
+
+function getProduct(slug) {
+  return PRODUCTS.find(p => p.slug === slug);
+}
+
+/* ============================================================
+   顯示結果
+   ============================================================ */
+function showResult() {
+  state.frozen = true;
+  state.currentArchetype = computeArchetype(state.picked);
+  const arc = state.currentArchetype;
+
+  document.getElementById('stage').classList.add('frozen');
+  slotsEl.classList.add('frozen');
+  overlayEl.classList.add('dim');
+  hintEl.classList.add('hide');
+
+  // 填結果欄
+  document.getElementById('arc-name').textContent = arc.name + ' · ' + arc.subtitle;
+  document.getElementById('narrative').textContent = arc.narrative;
+
+  // 三張 mini 卡
+  const trio = document.getElementById('trio');
+  trio.innerHTML = state.picked.map((p,i) => `
+    <div class="mini">
+      <div class="role-tag">${ROLE_CHN[i]}</div>
+      <div class="imgwrap"><img src="assets/products/${p.item.product.slug}.png" alt=""></div>
+      <div class="kw">${p.keyword}</div>
+    </div>
+  `).join('');
+
+  // 是否撿到神牌（任一張即算）
+  const hasTrump = state.picked.some(p => p.isTrump);
+  const gift = hasTrump ? ORACLE_GIFT.trump : ORACLE_GIFT.normal;
+  state.currentGift = gift;
+  state.hasTrump = hasTrump;
+
+  // 推薦：主推 + 搭配（主推帶「賣點橋接」）
+  const primary = getProduct(arc.primary);
+  const secondary = getProduct(arc.secondary);
+  const pickedKws = state.picked.map(p => p.keyword);
+  const picksEl = document.getElementById('picks');
+  const bridge = (product, withBridge) => {
+    if (!withBridge) return '';
+    const kwSpan = pickedKws.map(k => `<span class="hl">${k}</span>`).join(' · ');
+    const featSpan = (product.feat || []).slice(0, 2).map(f => `<span class="hl">${f}</span>`).join(' · ');
+    return `<div class="bridge">妳選了 ${kwSpan}。這件正是 ${featSpan} 的設計。</div>`;
+  };
+  picksEl.innerHTML = [
+    { tag:'為妳挑這一件', p: primary,   withBridge: true  },
+    { tag:'建議搭配',     p: secondary, withBridge: false },
+  ].map(x => `
+    <a class="pick" href="${BASE_URL}/?oracle=${encodeURIComponent(arc.name)}&code=${gift.code}" target="_blank" rel="noopener">
+      <div class="thumb"><img src="assets/products/${x.p.slug}.png" alt=""></div>
+      <div class="info">
+        <div class="tag">${x.tag}</div>
+        <div class="pname">${x.p.name}</div>
+        <div class="fabric">${x.p.sub.split(' · ').slice(1).join(' · ')}</div>
+        ${bridge(x.p, x.withBridge)}
+      </div>
+    </a>
+  `).join('');
+
+  // 占卜禮（依 hasTrump 切換）
+  const giftEl = document.getElementById('oracle-gift');
+  giftEl.classList.toggle('trump', hasTrump);
+  document.getElementById('gift-title').innerHTML = hasTrump
+    ? `神牌加持 <span class="rate">88折</span>`
+    : `ASify 官網任選 <span class="rate">88折</span>`;
+  document.getElementById('gift-sub').textContent = hasTrump
+    ? '下單即贈即將上市的止滑襪 · 島嶼棕'
+    : '讓妳帶走今天的「占卜結果」';
+  document.getElementById('gift-bonus').style.display = hasTrump ? '' : 'none';
+  document.getElementById('gift-code-txt').textContent = gift.code;
+  document.getElementById('gift-until').textContent = ORACLE_GIFT.until;
+  document.getElementById('gift-cta').href = `${BASE_URL}/?code=${gift.code}&oracle=${encodeURIComponent(arc.name)}`;
+  document.getElementById('gift-store-hint').textContent = '門市出示此頁享同折扣 · 持「分享解讀」存下的圖卡也適用';
+
+  const overlay = document.getElementById('result-overlay');
+  overlay.classList.add('show');
+  // 強制從頂部開始（避免上次 scroll 位置殘留 + flex 置中遺留）
+  overlay.scrollTop = 0;
+
+  // 預先把分享卡資料塞進去（等使用者按分享才 render）
+  prepareShareCard(arc, primary, gift, hasTrump);
+}
+
+/* ============================================================
+   分享卡片（離屏 render → html2canvas → 下載）
+   ============================================================ */
+function hexToRgb(hex) {
+  const h = hex.replace('#','');
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+
+function prepareShareCard(arc, primary, gift, hasTrump) {
+  const sc = document.getElementById('share-card');
+  sc.classList.toggle('trump', !!hasTrump);
+
+  // 套色彩 + 拆 RGB 給 rgba() 用（html2canvas 不支援 color-mix）
+  const p = arc.palette || { from:'#2a1d14', to:'#100c08', accent:'#d4a678', text:'#f5ead5' };
+  sc.style.setProperty('--pa-from', p.from);
+  sc.style.setProperty('--pa-to', p.to);
+  sc.style.setProperty('--pa-accent', p.accent);
+  sc.style.setProperty('--pa-text', p.text);
+  const [ar, ag, ab] = hexToRgb(p.accent);
+  const [tr, tg, tb] = hexToRgb(p.text);
+  sc.style.setProperty('--pa-accent-r', ar);
+  sc.style.setProperty('--pa-accent-g', ag);
+  sc.style.setProperty('--pa-accent-b', ab);
+  sc.style.setProperty('--pa-text-r', tr);
+  sc.style.setProperty('--pa-text-g', tg);
+  sc.style.setProperty('--pa-text-b', tb);
+
+  document.getElementById('sc-arc-name').textContent = arc.name;
+  document.getElementById('sc-arc-sub').textContent = arc.subtitle;
+  document.getElementById('sc-narrative').textContent = arc.narrative;
+  document.getElementById('sc-invite').textContent = arc.invite || '要不要也來占一張？';
+
+  // 三個關鍵字 tag（從 picked 拿，依 身/心/意 順序）
+  const tagsEl = document.getElementById('sc-tags');
+  tagsEl.innerHTML = state.picked.filter(Boolean).map(p =>
+    `<div class="sc-tag">${p.keyword}</div>`
+  ).join('');
+}
+
+async function generateShareImage() {
+  const el = document.getElementById('share-card');
+  el.style.left = '-99999px';
+  const canvas = await html2canvas(el, {
+    width: 1080, height: 1080, scale: 1,
+    backgroundColor: null, useCORS: true, allowTaint: true,
+    logging: false,
+  });
+  // 用 Blob URL 比 dataURL 更適合 iOS 長按存圖
+  return new Promise(resolve => {
+    canvas.toBlob(blob => {
+      const blobUrl = URL.createObjectURL(blob);
+      resolve({ blob, blobUrl });
+    }, 'image/png');
+  });
+}
+
+document.getElementById('share-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('share-btn');
+  btn.disabled = true; btn.textContent = '生成中…';
+  try {
+    const { blob, blobUrl } = await generateShareImage();
+    // 釋放上次的 blob URL（如果有）
+    if (state.lastBlobUrl) URL.revokeObjectURL(state.lastBlobUrl);
+    state.lastBlob = blob;
+    state.lastBlobUrl = blobUrl;
+    document.getElementById('sm-preview').src = blobUrl;
+    document.getElementById('share-modal').classList.add('show');
+    btn.disabled = false;
+    btn.textContent = '分享解讀 ✦';
+  } catch (err) {
+    console.error(err);
+    btn.textContent = '生成失敗';
+    setTimeout(()=>{btn.disabled=false;btn.textContent='分享解讀 ✦';}, 1800);
+  }
+});
+
+// Modal 關閉
+function closeShareModal() {
+  document.getElementById('share-modal').classList.remove('show');
+}
+document.getElementById('sm-close').addEventListener('click', closeShareModal);
+document.getElementById('sm-backdrop').addEventListener('click', closeShareModal);
+
+// Fallback 分享 modal（navigator.share 缺席 + clipboard 失敗時用）
+function openFallbackShare(text, url) {
+  const modal = document.getElementById('fallback-share');
+  const linkEl = document.getElementById('fs-link');
+  const copyBtn = document.getElementById('fs-copy');
+  const lineBtn = document.getElementById('fs-line');
+  const fullText = `${text}\n${url}`;
+  linkEl.value = url;
+  lineBtn.href = `https://line.me/R/share?text=${encodeURIComponent(fullText)}`;
+  copyBtn.dataset.payload = fullText;
+  copyBtn.classList.remove('copied');
+  copyBtn.textContent = '複製連結';
+  modal.classList.add('show');
+  setTimeout(() => { try { linkEl.focus(); linkEl.select(); } catch {} }, 60);
+}
+function closeFallbackShare() {
+  document.getElementById('fallback-share').classList.remove('show');
+}
+document.getElementById('fs-backdrop').addEventListener('click', closeFallbackShare);
+document.getElementById('fs-close').addEventListener('click', closeFallbackShare);
+document.getElementById('fs-copy').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  const payload = btn.dataset.payload || '';
+  const ok = copyTextSync(payload);
+  if (ok) {
+    btn.classList.add('copied');
+    btn.textContent = '已複製 ✓';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = '複製連結';
+    }, 1600);
+  } else {
+    // 失敗 → 把 input 文字選起來讓使用者長按複製
+    try {
+      const inp = document.getElementById('fs-link');
+      inp.focus(); inp.setSelectionRange(0, inp.value.length);
+    } catch {}
+    btn.textContent = '長按連結複製';
+    setTimeout(() => { btn.textContent = '複製連結'; }, 1800);
+  }
+});
+
+// 邀請朋友來占卜（分享連結 + 文字訊息，不分享圖片檔）
+document.getElementById('sm-share').addEventListener('click', async () => {
+  const btn = document.getElementById('sm-share');
+  const arc = state.currentArchetype;
+  const inviteURL = window.location.origin + window.location.pathname;
+  const text = arc
+    ? `我今天的 ASify 身體占卜是「${arc.name} · ${arc.subtitle}」✦ 妳也來占一張？`
+    : '我剛在 ASify 占卜了今日穿搭，妳也來占一張 ✦';
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'ASify 今日身體占卜',
+        text,
+        url: inviteURL,
+      });
+      return;
+    } catch (e) {
+      if (e?.name === 'AbortError') return;
+    }
+  }
+  // Fallback：複製邀請文字 + 連結
+  try {
+    await navigator.clipboard.writeText(`${text}\n${inviteURL}`);
+    const orig = btn.textContent;
+    btn.textContent = '邀請連結已複製 ✓';
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  } catch {
+    openFallbackShare(text, inviteURL);
+  }
+});
+
+
+/* ============================================================
+   重置
+   ============================================================ */
+function resetOracle() {
+  // 清除物理場
+  for (const it of items) {
+    Composite.remove(world, it.body);
+    it.el.remove();
+  }
+  items.length = 0;
+  state.picked = [null, null, null];
+  state.frozen = false;
+  state.currentArchetype = null;
+  state.trumpUsed = 0;
+
+  // 重置 UI
+  slotEls.forEach((s, i) => {
+    s.className = 'slot';
+    s.setAttribute('data-role', String(i));
+    s.innerHTML = `<div class="role">${ROLE_CHN[i]}</div><div class="role-en">${ROLE_EN[i]}</div>`;
+  });
+  document.getElementById('result-overlay').classList.remove('show');
+  document.getElementById('stage').classList.remove('frozen');
+  slotsEl.classList.remove('frozen');
+  overlayEl.classList.remove('dim');
+  hintEl.classList.remove('hide');
+  counterEl.textContent = '還要撿 3 件';
+
+  // 重新掉一批
+  const n = W < 600 ? 7 : 10;
+  for (let i=0;i<n;i++) setTimeout(() => spawnItem(), i*170);
+}
+
+// 邀請朋友做占卜（Web Share API → fallback 複製連結）
+// 用當前頁面 URL，不論部署在哪都正確
+document.getElementById('gift-invite').addEventListener('click', async () => {
+  const btn = document.getElementById('gift-invite');
+  const inviteURL = window.location.origin + window.location.pathname;
+  const msg = '我剛在 ASify 占卜了今日穿搭，妳也來占一張 ✦';
+  // 先試原生分享
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'ASify 今日身體占卜',
+        text: msg,
+        url: inviteURL,
+      });
+      return;
+    } catch (e) {
+      // 使用者取消分享 → 不動
+      if (e?.name === 'AbortError') return;
+    }
+  }
+  // Fallback：複製邀請文字 + 連結
+  try {
+    await navigator.clipboard.writeText(`${msg}\n${inviteURL}`);
+    const orig = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = '邀請連結已複製 ✓';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = orig;
+    }, 1800);
+  } catch (e) {
+    // 最終 fallback：自製 modal 顯示可選取連結 + LINE 分享
+    openFallbackShare(msg, inviteURL);
+  }
+});
+
+// === 跨瀏覽器複製文字（含 iOS Safari hack）===
+// 必須在 user-gesture 同步路徑內呼叫，不能在 await 之後
+function copyTextSync(text) {
+  let success = false;
+  // 同步路徑：textarea + execCommand（iOS Safari 在 http 也能 work）
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    // 必須在 viewport 內（iOS 嚴格），用 1×1px + opacity 隱藏
+    ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;border:0;padding:0;margin:0;font-size:16px;';
+    ta.setAttribute('readonly', '');
+    document.body.appendChild(ta);
+
+    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+    if (isIOS) {
+      // iOS Safari 需要 contentEditable + range + setSelectionRange 三件套
+      ta.contentEditable = 'true';
+      ta.readOnly = false;
+      const range = document.createRange();
+      range.selectNodeContents(ta);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      ta.setSelectionRange(0, text.length);
+    } else {
+      ta.focus();
+      ta.select();
+    }
+
+    success = !!(document.execCommand && document.execCommand('copy'));
+    document.body.removeChild(ta);
+  } catch {}
+
+  // 異步路徑：HTTPS 環境的 secure clipboard API（best-effort，不影響成敗判定）
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {});
+  }
+
+  return success;
+}
+
+// 複製折扣碼
+document.getElementById('gift-code-btn').addEventListener('click', () => {
+  const btn = document.getElementById('gift-code-btn');
+  const txt = (state.currentGift && state.currentGift.code) || 'oracle88';
+  const copied = copyTextSync(txt);
+
+  const orig = btn.innerHTML;
+  if (copied) {
+    btn.classList.add('copied');
+    btn.innerHTML = `<span>已複製 ✓</span>`;
+  } else {
+    btn.innerHTML = `<span>長按 ${txt} 複製</span>`;
+    // 把折扣碼文字選取起來方便長按
+    try {
+      const r = document.createRange();
+      r.selectNodeContents(document.getElementById('gift-code-txt'));
+      const sel = window.getSelection();
+      sel.removeAllRanges(); sel.addRange(r);
+    } catch {}
+  }
+  setTimeout(() => {
+    btn.classList.remove('copied');
+    btn.innerHTML = orig;
+  }, 1800);
+});
+
+document.getElementById('reoracle-btn').addEventListener('click', resetOracle);
+resetBtn.addEventListener('click', resetOracle);
+document.getElementById('shop-all').addEventListener('click', () => {
+  window.open(BASE_URL, '_blank', 'noopener');
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.frozen) resetOracle();
+});
+
+/* ============================================================
+   Resize
+   ============================================================ */
+let resizeTO;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTO);
+  resizeTO = setTimeout(() => {
+    W = window.innerWidth; H = window.innerHeight;
+    buildWalls();
+  }, 120);
+});
+</script>
+</body>
+</html>
