@@ -48,13 +48,20 @@
     <a class="cta-primary" href="https://www.as-for-me.com/products/basic-yoga-legging-full-lenght-royal-plum" target="_blank" rel="noopener">了解這款 →</a>
   </section>
 
-  <div class="share-row">
-    <button class="share-btn" type="button" onclick="shareCard()">分享給她 →</button>
-  </div>
+  <section class="store-experience">
+    <div class="store-img-wrap">
+      <img src="https://shoplineimg.com/5a5dde0872fdc02617000ee6/662b7e21240d620011d55128/900x.webp?source_format=png" alt="ASify 敦化店">
+    </div>
+    <p class="store-cta-label">到 ASify 敦化店體驗</p>
+    <p class="store-address">
+      台北市大安區忠孝東路四段 216 巷 8 弄 16 號 1 樓<br>
+      忠孝敦化捷運站 3 號出口・步行 1 分鐘
+    </p>
+  </section>
 
-  <section class="follow">
-    <p>想看更多身體跟妳的對話</p>
-    <a href="https://www.instagram.com/asyogapants" target="_blank" rel="noopener">追蹤 @asyogapants</a>
+  <section class="brand-connect">
+    <a class="connect-link" href="https://www.as-for-me.com/" target="_blank" rel="noopener">認識 ASify →</a>
+    <a class="connect-link" href="https://www.instagram.com/asyogapants" target="_blank" rel="noopener">追蹤 ASify IG →</a>
   </section>
 
   <section class="discount">
@@ -66,35 +73,9 @@
     </p>
   </section>
 
-  <p class="store">
-    <strong>ASify 敦化店</strong>
-    台北市大安區忠孝東路四段 216 巷 8 弄 16 號 1 樓<br>
-    忠孝敦化捷運站 3 號出口・步行 1 分鐘
-  </p>
-
 </main>
 
 <footer>ASify × HAI Society 2026 Mirror Future</footer>
-
-<script>
-function shareCard() {
-  const data = {
-    title: '釋放 ｜ Mirror Future',
-    text: '裡面那個妳，已經敲門很久。',
-    url: window.location.href
-  };
-  if (navigator.share) {
-    navigator.share(data).catch(() => {});
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      const btn = document.querySelector('.share-btn');
-      const orig = btn.textContent;
-      btn.textContent = '已複製連結 ✓';
-      setTimeout(() => btn.textContent = orig, 2000);
-    });
-  }
-}
-</script>
 
 </body>
 </html>
