@@ -1,8 +1,8 @@
 """
 Generate 6 QR codes for Mirror Future cards.
 
-Each QR has a centered Chinese character (typesetting in Songti).
-Output: ~/asify-gravity-landing/m26/qr/*.png (1200x1200, print-ready)
+Center label: English slug, ASify purple (#7c5cbf), Didot serif.
+Output: ~/asify-gravity-landing/m26/qr/*.png (1200x1200, print-ready, 600 DPI)
 """
 
 import os
@@ -21,14 +21,28 @@ CARDS = [
 
 BASE_URL = "https://oracle.as-for-me.com/m26/{slug}/"
 OUT_DIR = os.path.expanduser("~/asify-gravity-landing/m26/qr")
-SONGTI_PATH = "/System/Library/Fonts/Supplemental/Songti.ttc"
+FONT_PATH = "/System/Library/Fonts/Supplemental/Didot.ttc"
+FONT_INDEX = 0  # Didot Regular
 
-QR_SIZE = 1200  # final pixel dimension
-CENTER_BOX = 280  # white box behind char
-CHAR_SIZE = 220  # character font size in pixels
+QR_SIZE = 1200
+PURPLE = (124, 92, 191)  # ASify #7c5cbf
+MAX_LABEL_W = 460
+MAX_LABEL_H = 120
+MAX_FONT_SIZE = 110
 
 
-def make_qr(url: str, char: str, out_path: str) -> None:
+def fit_font(draw, text: str, max_w: int, max_h: int, max_size: int) -> ImageFont.FreeTypeFont:
+    size = max_size
+    while size > 20:
+        font = ImageFont.truetype(FONT_PATH, size, index=FONT_INDEX)
+        bbox = draw.textbbox((0, 0), text, font=font)
+        if (bbox[2] - bbox[0]) <= max_w and (bbox[3] - bbox[1]) <= max_h:
+            return font
+        size -= 2
+    return font
+
+
+def make_qr(url: str, slug_label: str, out_path: str) -> None:
     qr = qrcode.QRCode(
         version=None,
         error_correction=ERROR_CORRECT_H,
@@ -37,38 +51,42 @@ def make_qr(url: str, char: str, out_path: str) -> None:
     )
     qr.add_data(url)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+    img = qr.make_image(fill_color="#7c5cbf", back_color="white").convert("RGB")
     img = img.resize((QR_SIZE, QR_SIZE), Image.NEAREST)
 
-    # white circular/rounded square in center
     draw = ImageDraw.Draw(img)
     cx, cy = QR_SIZE // 2, QR_SIZE // 2
-    box_half = CENTER_BOX // 2
+
+    font = fit_font(draw, slug_label, MAX_LABEL_W, MAX_LABEL_H, MAX_FONT_SIZE)
+    bbox = draw.textbbox((0, 0), slug_label, font=font)
+    tw = bbox[2] - bbox[0]
+    th = bbox[3] - bbox[1]
+
+    pad_x = 32
+    pad_y = 18
+    bg_w = tw + pad_x * 2
+    bg_h = th + pad_y * 2
+
     draw.rounded_rectangle(
-        [cx - box_half, cy - box_half, cx + box_half, cy + box_half],
-        radius=16,
+        [cx - bg_w // 2, cy - bg_h // 2, cx + bg_w // 2, cy + bg_h // 2],
+        radius=10,
         fill="white",
     )
 
-    # render character
-    font = ImageFont.truetype(SONGTI_PATH, CHAR_SIZE)
-    bbox = draw.textbbox((0, 0), char, font=font)
-    tw = bbox[2] - bbox[0]
-    th = bbox[3] - bbox[1]
     tx = cx - tw // 2 - bbox[0]
     ty = cy - th // 2 - bbox[1]
-    draw.text((tx, ty), char, fill="black", font=font)
+    draw.text((tx, ty), slug_label, fill=PURPLE, font=font)
 
     img.save(out_path, "PNG", dpi=(600, 600))
-    print(f"OK  {out_path}  ({char}, {url})")
+    print(f"OK  {os.path.basename(out_path)}  label={slug_label!r}  url={url}")
 
 
 def main() -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
-    for slug, char in CARDS:
+    for slug, cn in CARDS:
         url = BASE_URL.format(slug=slug)
-        out = os.path.join(OUT_DIR, f"{slug}_{char}.png")
-        make_qr(url, char, out)
+        out = os.path.join(OUT_DIR, f"{slug}_{cn}.png")
+        make_qr(url, slug.upper(), out)
 
 
 if __name__ == "__main__":
