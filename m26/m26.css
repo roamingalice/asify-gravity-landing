@@ -1,0 +1,295 @@
+:root {
+  --bg: #0a0a0a;
+  --ink: #f5f1ec;
+  --ink-soft: #a8a39a;
+  --ink-faint: #6b6760;
+  --accent: #7c5cbf;
+  --accent-soft: #b9a3e0;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(800px 400px at 50% -20%, rgba(124, 92, 191, 0.12) 0%, transparent 70%),
+    radial-gradient(600px 400px at 100% 100%, rgba(124, 92, 191, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 28px 80px;
+}
+
+header {
+  padding: 28px 28px 0;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  margin: 0 auto;
+}
+header a {
+  display: inline-block;
+  opacity: 0.85;
+  transition: opacity .2s;
+}
+header a:hover { opacity: 1; }
+header img {
+  height: 28px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+.event-tag {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.42em;
+  color: var(--ink-faint);
+  margin-top: 48px;
+  margin-bottom: 24px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.card-name {
+  text-align: center;
+  font-family: "Noto Serif TC", "Songti TC", serif;
+  font-size: clamp(48px, 13vw, 72px);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  margin-bottom: 32px;
+  color: var(--ink);
+  position: relative;
+}
+.card-name::after {
+  content: "";
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: var(--accent-soft);
+  margin: 28px auto 0;
+}
+
+.hook {
+  text-align: center;
+  font-family: "Noto Serif TC", "Songti TC", serif;
+  font-size: clamp(20px, 5vw, 26px);
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 56px;
+  letter-spacing: 0.04em;
+}
+
+.reading {
+  margin: 0 0 56px;
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+}
+.reading p { margin-bottom: 14px; }
+.reading p:last-child { margin-bottom: 0; }
+
+.section-divider {
+  width: 24px;
+  height: 1px;
+  background: var(--line-strong);
+  margin: 64px auto;
+}
+
+.brand-view-label {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.36em;
+  color: var(--accent-soft);
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+.brand-view-title {
+  text-align: center;
+  font-family: "Noto Serif TC", "Songti TC", serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  margin-bottom: 28px;
+}
+.brand-view-body {
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+}
+.brand-view-body p { margin-bottom: 14px; }
+.brand-view-body p:last-child { margin-bottom: 0; }
+
+.product-card {
+  margin: 64px 0 56px;
+  text-align: center;
+}
+.product-card .img-wrap {
+  background: linear-gradient(180deg, #15131a 0%, #0d0b10 100%);
+  border-radius: 4px;
+  padding: 32px 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--line);
+}
+.product-card img {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.product-card .product-name {
+  font-family: "Noto Serif TC", "Songti TC", serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+.cta-primary {
+  display: inline-block;
+  padding: 14px 36px;
+  border: 1px solid var(--accent-soft);
+  color: var(--accent-soft);
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 0.24em;
+  border-radius: 999px;
+  transition: all .25s ease;
+}
+.cta-primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.share-row {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-soft);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .25s ease;
+}
+.share-btn:hover {
+  border-color: var(--accent-soft);
+  color: var(--accent-soft);
+}
+
+.follow {
+  text-align: center;
+  padding: 48px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 48px;
+}
+.follow p {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin-bottom: 20px;
+  letter-spacing: 0.06em;
+}
+.follow a {
+  display: inline-block;
+  padding: 14px 32px;
+  background: var(--accent);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  border-radius: 999px;
+  transition: background .25s ease;
+}
+.follow a:hover { background: var(--accent-soft); color: var(--bg); }
+
+.discount {
+  text-align: center;
+  padding: 36px 24px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+.discount-label {
+  font-size: 10px;
+  letter-spacing: 0.36em;
+  color: var(--accent-soft);
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+.discount-code {
+  font-family: "Noto Serif TC", "Songti TC", serif;
+  font-size: 28px;
+  letter-spacing: 0.16em;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+.discount-rules {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+}
+
+.store {
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-faint);
+  line-height: 1.8;
+  letter-spacing: 0.06em;
+  margin-bottom: 64px;
+}
+.store strong {
+  display: block;
+  color: var(--ink-soft);
+  font-weight: 500;
+  margin-bottom: 4px;
+  letter-spacing: 0.1em;
+}
+
+footer {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: var(--ink-faint);
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 380px) {
+  main { padding: 0 22px 60px; }
+  header { padding: 22px 22px 0; }
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>釋放 ｜ ASify × HAI Society 2026 Mirror Future</title>
+<meta property="og:title" content="釋放 ｜ Mirror Future">
+<meta property="og:description" content="裡面那個妳，已經敲門很久。">
+<link rel="stylesheet" href="../m26.css">
+</head>
+<body>
+
+<header>
+  <a href="https://www.as-for-me.com/" aria-label="ASify 官網">
+    <img src="../assets/asify-logo.png" alt="ASify">
+  </a>
+</header>
+
+<main>
+
+  <p class="event-tag">Mirror Future ／ Card 05</p>
+  <h1 class="card-name">釋放</h1>
+  <p class="hook">裡面那個妳，<br>已經敲門很久。</p>
+
+  <section class="reading">
+    <p>妳一直假裝沒聽見。</p>
+    <p>不是因為她不該出來，是因為妳怕出來之後就回不去。</p>
+    <p>但她已經敲了很久了。妳今晚會不會開門，妳自己知道。</p>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <section>
+    <p class="brand-view-label">ASify 怎麼看</p>
+    <h2 class="brand-view-title">裡面那個妳敲門很久</h2>
+    <div class="brand-view-body">
+      <p>裡面那個妳，不是要打破什麼，是想找一條能完整做自己動作的褲。</p>
+      <p>我們設計每個動作的極限——深蹲、後彎、橫劈，就為了讓妳該出來的時候，沒有東西攔妳。</p>
+    </div>
+  </section>
+
+  <section class="product-card">
+    <div class="img-wrap">
+      <img src="https://shoplineimg.com/5a5dde0872fdc02617000ee6/69cded1177e254ac8fd3d031/2960x.webp?source_format=png" alt="釋放自己果凍黛紫">
+    </div>
+    <p class="product-name">釋放自己果凍黛紫</p>
+    <a class="cta-primary" href="https://www.as-for-me.com/products/basic-yoga-legging-full-lenght-royal-plum" target="_blank" rel="noopener">了解這款 →</a>
+  </section>
+
+  <div class="share-row">
+    <button class="share-btn" type="button" onclick="shareCard()">分享給她 →</button>
+  </div>
+
+  <section class="follow">
+    <p>想看更多身體跟妳的對話</p>
+    <a href="https://www.instagram.com/asyogapants" target="_blank" rel="noopener">追蹤 @asyogapants</a>
+  </section>
+
+  <section class="discount">
+    <p class="discount-label">VIP 今晚限定</p>
+    <p class="discount-code">MIRROR2026</p>
+    <p class="discount-rules">
+      6/30 前出示此頁<br>
+      到 ASify 敦化店任何正價商品享 85 折
+    </p>
+  </section>
+
+  <p class="store">
+    <strong>ASify 敦化店</strong>
+    台北市大安區忠孝東路四段 216 巷 8 弄 16 號 1 樓<br>
+    忠孝敦化捷運站 3 號出口・步行 1 分鐘
+  </p>
+
+</main>
+
+<footer>ASify × HAI Society 2026 Mirror Future</footer>
+
+<script>
+function shareCard() {
+  const data = {
+    title: '釋放 ｜ Mirror Future',
+    text: '裡面那個妳，已經敲門很久。',
+    url: window.location.href
+  };
+  if (navigator.share) {
+    navigator.share(data).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = document.querySelector('.share-btn');
+      const orig = btn.textContent;
+      btn.textContent = '已複製連結 ✓';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  }
+}
+</script>
+
+</body>
+</html>

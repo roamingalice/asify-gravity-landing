@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>輕盈 ｜ ASify × HAI Society 2026 Mirror Future</title>
+<meta property="og:title" content="輕盈 ｜ Mirror Future">
+<meta property="og:description" content="想輕到，連自己都不見。">
+<link rel="stylesheet" href="../m26.css">
+</head>
+<body>
+
+<header>
+  <a href="https://www.as-for-me.com/" aria-label="ASify 官網">
+    <img src="../assets/asify-logo.png" alt="ASify">
+  </a>
+</header>
+
+<main>
+
+  <p class="event-tag">Mirror Future ／ Card 02</p>
+  <h1 class="card-name">輕盈</h1>
+  <p class="hook">想輕到，<br>連自己都不見。</p>
+
+  <section class="reading">
+    <p>不是想消失，是想暫時放下「自己」這件事。</p>
+    <p>重量不只是身體的，有時候是這幾天、這幾年、不知道誰交給妳的。</p>
+    <p>妳想輕到，連這些都不見。</p>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <section>
+    <p class="brand-view-label">ASify 怎麼看</p>
+    <h2 class="brand-view-title">想輕到連自己都不見</h2>
+    <div class="brand-view-body">
+      <p>衣服的重量，不該變成妳的重量。</p>
+      <p>我們專為亞洲女生重新打版，不是把歐美尺寸縮小，是讓妳的身體能找到自己最輕的版本。</p>
+    </div>
+  </section>
+
+  <section class="product-card">
+    <div class="img-wrap">
+      <img src="https://shoplineimg.com/5a5dde0872fdc02617000ee6/69cdea9a5f4fad90ff587439/2960x.webp?source_format=png" alt="修身輕盈松石綠">
+    </div>
+    <p class="product-name">修身輕盈松石綠</p>
+    <a class="cta-primary" href="https://www.as-for-me.com/products/basic-yoga-legging-full-lenght-turquoise-green" target="_blank" rel="noopener">了解這款 →</a>
+  </section>
+
+  <div class="share-row">
+    <button class="share-btn" type="button" onclick="shareCard()">分享給她 →</button>
+  </div>
+
+  <section class="follow">
+    <p>想看更多身體跟妳的對話</p>
+    <a href="https://www.instagram.com/asyogapants" target="_blank" rel="noopener">追蹤 @asyogapants</a>
+  </section>
+
+  <section class="discount">
+    <p class="discount-label">VIP 今晚限定</p>
+    <p class="discount-code">MIRROR2026</p>
+    <p class="discount-rules">
+      6/30 前出示此頁<br>
+      到 ASify 敦化店任何正價商品享 85 折
+    </p>
+  </section>
+
+  <p class="store">
+    <strong>ASify 敦化店</strong>
+    台北市大安區忠孝東路四段 216 巷 8 弄 16 號 1 樓<br>
+    忠孝敦化捷運站 3 號出口・步行 1 分鐘
+  </p>
+
+</main>
+
+<footer>ASify × HAI Society 2026 Mirror Future</footer>
+
+<script>
+function shareCard() {
+  const data = {
+    title: '輕盈 ｜ Mirror Future',
+    text: '想輕到，連自己都不見。',
+    url: window.location.href
+  };
+  if (navigator.share) {
+    navigator.share(data).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = document.querySelector('.share-btn');
+      const orig = btn.textContent;
+      btn.textContent = '已複製連結 ✓';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  }
+}
+</script>
+
+</body>
+</html>

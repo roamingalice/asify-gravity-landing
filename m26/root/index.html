@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>扎根 ｜ ASify × HAI Society 2026 Mirror Future</title>
+<meta property="og:title" content="扎根 ｜ Mirror Future">
+<meta property="og:description" content="妳越往下，越像妳自己。">
+<link rel="stylesheet" href="../m26.css">
+</head>
+<body>
+
+<header>
+  <a href="https://www.as-for-me.com/" aria-label="ASify 官網">
+    <img src="../assets/asify-logo.png" alt="ASify">
+  </a>
+</header>
+
+<main>
+
+  <p class="event-tag">Mirror Future ／ Card 04</p>
+  <h1 class="card-name">扎根</h1>
+  <p class="hook">妳越往下，<br>越像妳自己。</p>
+
+  <section class="reading">
+    <p>不是不動，是不會被搬走。</p>
+    <p>最深的根，妳自己看不到。</p>
+    <p>妳之所以是妳，不是因為妳走了多遠，是因為妳沒走。</p>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <section>
+    <p class="brand-view-label">ASify 怎麼看</p>
+    <h2 class="brand-view-title">越往下越像自己</h2>
+    <div class="brand-view-body">
+      <p>最穩的不是最緊的，是版型剛剛好包在妳的身體輪廓上。</p>
+      <p>我們為亞洲女生腰臀比打版，不是為了顯瘦，是讓妳站著、坐著、蹲下，都還是妳的形狀。</p>
+    </div>
+  </section>
+
+  <section class="product-card">
+    <div class="img-wrap">
+      <img src="https://shoplineimg.com/5a5dde0872fdc02617000ee6/69cded87a7003ccb824b93a0/2960x.webp?source_format=png" alt="穩定扎根礦藍">
+    </div>
+    <p class="product-name">穩定扎根礦藍</p>
+    <a class="cta-primary" href="https://www.as-for-me.com/products/asify-seamless-full-length-leggings-mineral-blue-butter-2" target="_blank" rel="noopener">了解這款 →</a>
+  </section>
+
+  <div class="share-row">
+    <button class="share-btn" type="button" onclick="shareCard()">分享給她 →</button>
+  </div>
+
+  <section class="follow">
+    <p>想看更多身體跟妳的對話</p>
+    <a href="https://www.instagram.com/asyogapants" target="_blank" rel="noopener">追蹤 @asyogapants</a>
+  </section>
+
+  <section class="discount">
+    <p class="discount-label">VIP 今晚限定</p>
+    <p class="discount-code">MIRROR2026</p>
+    <p class="discount-rules">
+      6/30 前出示此頁<br>
+      到 ASify 敦化店任何正價商品享 85 折
+    </p>
+  </section>
+
+  <p class="store">
+    <strong>ASify 敦化店</strong>
+    台北市大安區忠孝東路四段 216 巷 8 弄 16 號 1 樓<br>
+    忠孝敦化捷運站 3 號出口・步行 1 分鐘
+  </p>
+
+</main>
+
+<footer>ASify × HAI Society 2026 Mirror Future</footer>
+
+<script>
+function shareCard() {
+  const data = {
+    title: '扎根 ｜ Mirror Future',
+    text: '妳越往下，越像妳自己。',
+    url: window.location.href
+  };
+  if (navigator.share) {
+    navigator.share(data).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = document.querySelector('.share-btn');
+      const orig = btn.textContent;
+      btn.textContent = '已複製連結 ✓';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  }
+}
+</script>
+
+</body>
+</html>
