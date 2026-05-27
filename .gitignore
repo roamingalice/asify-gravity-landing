@@ -2,3 +2,4 @@
 assets/_originals/
 test-fallback.html
 m26/__pycache__/
+.verify-tmp/
