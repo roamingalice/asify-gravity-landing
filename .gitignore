@@ -3,3 +3,5 @@ assets/_originals/
 test-fallback.html
 m26/__pycache__/
 .verify-tmp/
+m26/qr_dark/
+m26/generate_qr_dark.py

@@ -21,6 +21,10 @@ CARDS = [
 
 BASE_URL = "https://oracle.as-for-me.com/m26/{slug}/"
 OUT_DIR = os.path.expanduser("~/asify-gravity-landing/m26/qr")
+
+LABEL_OVERRIDE = {
+    "emerge": "RELEASE",  # 「釋放」中央字用 RELEASE，URL slug 仍是 emerge
+}
 FONT_PATH = "/System/Library/Fonts/Supplemental/Didot.ttc"
 FONT_INDEX = 0  # Didot Regular
 
@@ -86,7 +90,8 @@ def main() -> None:
     for slug, cn in CARDS:
         url = BASE_URL.format(slug=slug)
         out = os.path.join(OUT_DIR, f"{slug}_{cn}.png")
-        make_qr(url, slug.upper(), out)
+        label = LABEL_OVERRIDE.get(slug, slug.upper())
+        make_qr(url, label, out)
 
 
 if __name__ == "__main__":
